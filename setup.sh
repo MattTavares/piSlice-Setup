@@ -17,6 +17,14 @@ update_and_upgrade() {
     fi
 }
 
+update_and_autoremove() {
+    sudo apt-get update && sudo apt-get autoremove -y
+    if [ $? -ne 0 ]; then
+        log "Update and upgrade failed."
+        exit 1
+    fi
+}
+
 install_package() {
     local package="$1"
     log "Installing $package..."
@@ -30,12 +38,22 @@ install_package() {
 
 configure_raspi() {
     log "Configuring Raspberry Pi..."
-    sudo raspi-config nonint do_serial 2
+
+    # Disable console over serial port
+    sudo raspi-config nonint do_serial_cons 1
     if [ $? -ne 0 ]; then
-        log "Raspberry Pi configuration failed."
+        log "Disabling serial console failed."
         exit 1
     fi
-    log "Raspberry Pi configured successfully."
+
+    # Enable serial port hardware
+    sudo raspi-config nonint do_serial_hw 0
+    if [ $? -ne 0 ]; then
+        log "Enabling serial port hardware failed."
+        exit 1
+    fi
+
+    log "Raspberry Pi Serial Port configured successfully."
 }
 
 configure_watchdog() {
@@ -68,6 +86,7 @@ configure_mosquitto() {
     sudo bash -c "echo 'listener 1883' >> /etc/mosquitto/mosquitto.conf"
     sudo bash -c "echo 'allow_anonymous true' >> /etc/mosquitto/mosquitto.conf"
     sudo systemctl enable mosquitto.service
+    sudo systemctl start mosquitto.service
     if [ $? -ne 0 ]; then
         log "Mosquitto configuration failed."
         exit 1
@@ -103,13 +122,13 @@ EOF'
 
 install_node_red() {
     log "Installing Node-RED..."
-    bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered) --confirm-root
+    bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered) --confirm-root --confirm-install --confirm-pi --no-init
     sudo systemctl enable nodered.service
+    sudo systemctl start nodered.service
     if [ $? -ne 0 ]; then
         log "Node-RED installation failed."
         exit 1
     fi
-    sudo service nodered start
     log "Node-RED installed successfully."
 }
 
@@ -152,6 +171,8 @@ main() {
     configure_logrotate
     install_node_red
     install_tailscale
+    update_and_autoremove
+    
 
     log "Installation and configuration complete!"
 }
