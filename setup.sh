@@ -120,7 +120,20 @@ install_tailscale() {
         log "Tailscale installation failed."
         exit 1
     fi
-    log "Tailscale installed successfully."
+    
+    read -p "Please enter your Tailscale auth key: " tailscale_auth_key
+    if [[ -z "$tailscale_auth_key" ]]; then
+        log "No Tailscale auth key provided. Exiting."
+        exit 1
+    fi
+    
+    sudo tailscale up --authkey "$tailscale_auth_key"
+    if [ $? -ne 0 ]; then
+        log "Tailscale authentication failed."
+        exit 1
+    fi
+    
+    log "Tailscale installed and authenticated successfully."
 }
 
 main() {
