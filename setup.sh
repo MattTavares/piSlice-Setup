@@ -109,6 +109,7 @@ install_node_red() {
         log "Node-RED installation failed."
         exit 1
     fi
+    sudo service nodered start
     log "Node-RED installed successfully."
 }
 
