@@ -64,7 +64,7 @@ configure_mosquitto() {
     add_line_to_file 'listener 1883' '/etc/mosquitto/mosquitto.conf'
     add_line_to_file 'allow_anonymous true' '/etc/mosquitto/mosquitto.conf'
     sudo systemctl enable mosquitto.service
-    sudo service mosquitto.service start
+    sudo service mosquitto start
     log "Mosquitto configured successfully."
 }
 
