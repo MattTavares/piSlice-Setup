@@ -9,30 +9,24 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $@"
 }
 
+add_line_to_file() {
+    local line="$1"
+    local file="$2"
+    grep -qF -- "$line" "$file" || echo "$line" | sudo tee -a "$file"
+}
+
 update_and_upgrade() {
     sudo apt-get update && sudo apt-get upgrade -y
-    if [ $? -ne 0 ]; then
-        log "Update and upgrade failed."
-        exit 1
-    fi
 }
 
 update_and_autoremove() {
     sudo apt-get update && sudo apt-get autoremove -y
-    if [ $? -ne 0 ]; then
-        log "Update and upgrade failed."
-        exit 1
-    fi
 }
 
 install_package() {
     local package="$1"
     log "Installing $package..."
     sudo apt-get install -y "$package"
-    if [ $? -ne 0 ]; then
-        log "Installation of $package failed."
-        exit 1
-    fi
     log "$package installed successfully."
 }
 
@@ -41,32 +35,20 @@ configure_raspi() {
 
     # Disable console over serial port
     sudo raspi-config nonint do_serial_cons 1
-    if [ $? -ne 0 ]; then
-        log "Disabling serial console failed."
-        exit 1
-    fi
 
     # Enable serial port hardware
     sudo raspi-config nonint do_serial_hw 0
-    if [ $? -ne 0 ]; then
-        log "Enabling serial port hardware failed."
-        exit 1
-    fi
 
     log "Raspberry Pi Serial Port configured successfully."
 }
 
 configure_watchdog() {
     log "Configuring watchdog..."
-    sudo bash -c "echo 'watchdog-device = /dev/watchdog' >> /etc/watchdog.conf"
-    sudo bash -c "echo 'watchdog-timeout = 15' >> /etc/watchdog.conf"
-    sudo bash -c "echo 'max-load-1 = 24' >> /etc/watchdog.conf"
+    add_line_to_file 'watchdog-device = /dev/watchdog' '/etc/watchdog.conf'
+    add_line_to_file 'watchdog-timeout = 15' '/etc/watchdog.conf'
+    add_line_to_file 'max-load-1 = 24' '/etc/watchdog.conf'
     sudo systemctl enable watchdog
     sudo systemctl start watchdog
-    if [ $? -ne 0 ]; then
-        log "Watchdog configuration failed."
-        exit 1
-    fi
     log "Watchdog configured successfully."
 }
 
@@ -74,23 +56,15 @@ configure_bluetooth() {
     log "Disabling Bluetooth..."
     sudo systemctl disable hciuart.service
     sudo systemctl disable bluetooth.service
-    if [ $? -ne 0 ]; then
-        log "Disabling Bluetooth failed."
-        exit 1
-    fi
     log "Bluetooth disabled successfully."
 }
 
 configure_mosquitto() {
     log "Configuring Mosquitto..."
-    sudo bash -c "echo 'listener 1883' >> /etc/mosquitto/mosquitto.conf"
-    sudo bash -c "echo 'allow_anonymous true' >> /etc/mosquitto/mosquitto.conf"
+    add_line_to_file 'listener 1883' '/etc/mosquitto/mosquitto.conf'
+    add_line_to_file 'allow_anonymous true' '/etc/mosquitto/mosquitto.conf'
     sudo systemctl enable mosquitto.service
     sudo systemctl start mosquitto.service
-    if [ $? -ne 0 ]; then
-        log "Mosquitto configuration failed."
-        exit 1
-    fi
     log "Mosquitto configured successfully."
 }
 
@@ -113,10 +87,6 @@ postrotate
     /usr/bin/killall -HUP rsyslogd 2> /dev/null || true
 endscript
 EOF'
-    if [ $? -ne 0 ]; then
-        log "Logrotate configuration failed."
-        exit 1
-    fi
     log "Logrotate configured successfully."
 }
 
@@ -125,20 +95,12 @@ install_node_red() {
     bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered) --confirm-root --confirm-install --confirm-pi --no-init
     sudo systemctl enable nodered.service
     sudo systemctl start nodered.service
-    if [ $? -ne 0 ]; then
-        log "Node-RED installation failed."
-        exit 1
-    fi
     log "Node-RED installed successfully."
 }
 
 install_tailscale() {
     log "Installing Tailscale..."
     curl -fsSL https://tailscale.com/install.sh | sh
-    if [ $? -ne 0 ]; then
-        log "Tailscale installation failed."
-        exit 1
-    fi
     
     read -p "Please enter your Tailscale auth key: " tailscale_auth_key
     if [[ -z "$tailscale_auth_key" ]]; then
@@ -147,11 +109,6 @@ install_tailscale() {
     fi
     
     sudo tailscale up --authkey "$tailscale_auth_key"
-    if [ $? -ne 0 ]; then
-        log "Tailscale authentication failed."
-        exit 1
-    fi
-    
     log "Tailscale installed and authenticated successfully."
 }
 
@@ -172,7 +129,6 @@ main() {
     install_node_red
     install_tailscale
     update_and_autoremove
-    
 
     log "Installation and configuration complete!"
 }
