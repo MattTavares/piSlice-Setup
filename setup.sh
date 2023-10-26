@@ -94,7 +94,7 @@ install_node_red() {
     log "Installing Node-RED..."
     bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered) --confirm-root --confirm-install --confirm-pi --no-init
     sudo systemctl enable nodered.service
-    sudo service nodered.service start
+    sudo service nodered start
     log "Node-RED installed successfully."
 }
 
