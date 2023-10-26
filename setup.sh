@@ -48,7 +48,7 @@ configure_watchdog() {
     add_line_to_file 'watchdog-timeout = 15' '/etc/watchdog.conf'
     add_line_to_file 'max-load-1 = 24' '/etc/watchdog.conf'
     sudo systemctl enable watchdog
-    sudo systemctl start watchdog
+    sudo service watchdog start
     log "Watchdog configured successfully."
 }
 
@@ -64,7 +64,7 @@ configure_mosquitto() {
     add_line_to_file 'listener 1883' '/etc/mosquitto/mosquitto.conf'
     add_line_to_file 'allow_anonymous true' '/etc/mosquitto/mosquitto.conf'
     sudo systemctl enable mosquitto.service
-    sudo systemctl start mosquitto.service
+    sudo service mosquitto.service start
     log "Mosquitto configured successfully."
 }
 
@@ -94,7 +94,7 @@ install_node_red() {
     log "Installing Node-RED..."
     bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered) --confirm-root --confirm-install --confirm-pi --no-init
     sudo systemctl enable nodered.service
-    sudo systemctl start nodered.service
+    sudo service nodered.service start
     log "Node-RED installed successfully."
 }
 
