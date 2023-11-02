@@ -1,3 +1,23 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $@"
+}
+
+stop_nodered() {
+    log "Stopping Node-RED..."
+    sudo systemctl stop nodered.service
+}
+
+start_nodered() {
+    log "Starting Node-RED..."
+    sudo systemctl start nodered.service
+}
+
 confirm_proceed() {
     local bypass_confirm="$1"
 
