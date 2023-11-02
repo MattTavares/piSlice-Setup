@@ -114,6 +114,15 @@ install_tailscale() {
     log "Tailscale installed and authenticated successfully."
 }
 
+download_and_prepare_secure_script() {
+    log "Downloading and preparing secure_nodered.sh script..."
+    pushd /home/rootlab
+    wget https://raw.githubusercontent.com/MattTavares/piSlice-Setup/main/secure_nodered.sh
+    chmod +x secure_nodered.sh
+    popd
+    log "secure_nodered.sh script ready for execution."
+}
+
 main() {
     update_and_upgrade
     install_package "watchdog"
@@ -129,6 +138,7 @@ main() {
     configure_mosquitto
     configure_logrotate
     install_node_red
+    download_and_prepare_secure_script
     install_tailscale
     update_and_autoremove
 
