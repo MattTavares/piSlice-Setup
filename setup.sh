@@ -63,6 +63,8 @@ configure_mosquitto() {
     log "Configuring Mosquitto..."
     add_line_to_file 'listener 1883' '/etc/mosquitto/mosquitto.conf'
     add_line_to_file 'allow_anonymous true' '/etc/mosquitto/mosquitto.conf'
+    add_line_to_file 'max_queued_messages 100' '/etc/mosquitto/mosquitto.conf'
+    sed -i '/persistence true/c\persistence false' /etc/mosquitto/mosquitto.conf
     sudo systemctl enable mosquitto.service
     sudo service mosquitto start
     log "Mosquitto configured successfully."
