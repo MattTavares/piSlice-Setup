@@ -10,12 +10,12 @@ log() {
 
 stop_nodered() {
     log "Stopping Node-RED..."
-    sudo systemctl stop nodered.service
+    /usr/bin/sudo /usr/bin/systemctl stop nodered.service
 }
 
 start_nodered() {
     log "Starting Node-RED..."
-    sudo systemctl start nodered.service
+    /usr/bin/sudo /usr/bin/systemctl start nodered.service
 }
 
 confirm_proceed() {
@@ -30,6 +30,13 @@ confirm_proceed() {
     fi
 }
 
+validate_input() {
+    local input="$1"
+    # Add validation logic for password hash or other input as needed
+    # Placeholder function for now
+    echo "$input"
+}
+
 configure_credentials() {
     local username="$1"
     local settings_file="$2"
@@ -39,10 +46,15 @@ configure_credentials() {
     confirm_proceed "$bypass_confirm"
 
     read -p "Enter password hash for $username: " password_hash
+    password_hash=$(validate_input "$password_hash")
+
+    # Create a temporary file using mktemp
+    local tmp_file
+    tmp_file=$(mktemp)
 
     # Remove any existing uncommented adminAuth block
-    sudo sed -i '/adminAuth/,/}/{//!d}' "$settings_file"
-    sudo sed -i '/adminAuth/d' "$settings_file"
+    /usr/bin/sudo /usr/bin/sed -i '/adminAuth/,/}/{//!d}' "$settings_file"
+    /usr/bin/sudo /usr/bin/sed -i '/adminAuth/d' "$settings_file"
 
     local credentials_block="adminAuth: {
     type: \"credentials\",
@@ -55,6 +67,7 @@ configure_credentials() {
 
     if [[ "$add_mtavares" == "true" ]]; then
         read -p "Enter password hash for mtavares: " mtavares_password_hash
+        mtavares_password_hash=$(validate_input "$mtavares_password_hash")
         credentials_block+=",
         {
             username: \"mtavares\",
@@ -66,12 +79,13 @@ configure_credentials() {
     credentials_block+="]
 },"
 
-    echo -e "$credentials_block" > credentials_tmp_block
+    echo -e "$credentials_block" > "$tmp_file"
 
     # Insert the new credentials block after the module.exports line
-    sudo sed -i "/module.exports/r credentials_tmp_block" "$settings_file"
+    /usr/bin/sudo /usr/bin/sed -i "/module.exports/r $tmp_file" "$settings_file"
 
-    rm credentials_tmp_block
+    # Remove the temporary file
+    rm "$tmp_file"
 
     log "Credentials configured successfully."
 }
@@ -99,9 +113,15 @@ main() {
         esac
     done
 
-    if [[ ! "$*" =~ "-r" && ! "$*" =~ "--rootlab" ]]; then
+    if [[ ! "$*" =~ "-r" ]]; then
         read -p "Enter username for Node-RED: " username
         settings_file="/home/$username/.node-red/settings.js"
+    fi
+
+    # Check if the settings file exists
+    if [[ ! -f "$settings_file" ]]; then
+        echo "Settings file not found: $settings_file" >&2
+        exit 1
     fi
 
     stop_nodered
