@@ -8,6 +8,16 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $@"
 }
 
+stop_nodered() {
+    log "Stopping Node-RED..."
+    sudo systemctl stop nodered.service
+}
+
+start_nodered() {
+    log "Starting Node-RED..."
+    sudo systemctl start nodered.service
+}
+
 configure_credentials() {
     read -p "Enter username for Node-RED: " username
     read -sp "Enter password for Node-RED: " password
@@ -15,7 +25,7 @@ configure_credentials() {
 
     password_hash=$(node-red admin hash-pw --password "$password")
 
-    settings_file="/root/.node-red/settings.js"
+    settings_file="/home/rootlab/.node-red/settings.js"
     credentials_line="adminAuth: { type: \"credentials\", users: [{ username: \"$username\", password: \"$password_hash\", permissions: \"*\" }]},"
 
     # Insert the credentials line after the module.exports line
@@ -25,7 +35,9 @@ configure_credentials() {
 }
 
 main() {
+    stop_nodered
     configure_credentials
+    start_nodered
 }
 
 main "$@"
