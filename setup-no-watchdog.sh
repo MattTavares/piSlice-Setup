@@ -133,7 +133,7 @@ main() {
     install_package "logrotate"
 
     configure_raspi
-    configure_watchdog
+#    configure_watchdog
     configure_bluetooth
     configure_mosquitto
     configure_logrotate
