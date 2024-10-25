@@ -103,20 +103,20 @@ install_node_red() {
 install_tailscale() {
     log "Installing Tailscale..."
     curl -fsSL https://tailscale.com/install.sh | sh
-    
+
     read -p "Please enter your Tailscale auth key: " tailscale_auth_key
     if [[ -z "$tailscale_auth_key" ]]; then
         log "No Tailscale auth key provided. Exiting."
         exit 1
     fi
-    
+
     sudo tailscale up --authkey "$tailscale_auth_key"
     log "Tailscale installed and authenticated successfully."
 }
 
 download_and_prepare_secure_script() {
     log "Downloading and preparing secure_nodered.sh script..."
-    pushd /home/rootlab
+    pushd "$HOME"
     wget https://raw.githubusercontent.com/MattTavares/piSlice-Setup/main/secure_nodered.sh
     chmod +x secure_nodered.sh
     popd
