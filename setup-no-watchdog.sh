@@ -54,7 +54,6 @@ configure_watchdog() {
 
 configure_bluetooth() {
     log "Disabling Bluetooth..."
-    sudo systemctl disable hciuart.service
     sudo systemctl disable bluetooth.service
     log "Bluetooth disabled successfully."
 }
