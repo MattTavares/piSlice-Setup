@@ -133,7 +133,7 @@ main() {
 
     configure_raspi
 #    configure_watchdog
-    configure_bluetooth
+#    configure_bluetooth
     configure_mosquitto
     configure_logrotate
     install_node_red
